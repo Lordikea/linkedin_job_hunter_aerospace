@@ -2,138 +2,140 @@
 searches:
 
   # ==========================================
-  # SEARCH 1: FRANCE
+  # SEARCH 1: AVIONICS & FLIGHT CONTROLS
   # ==========================================
 
-  - name: "Graphic Designer - France"
+  - name: "Avionics & Flight Controls - Singapore"
 
     keywords:
-      - "Graphic Designer"
-      - "Graphic Design"
-      - "Designer graphique"
-      - "Graphiste"
-      - "Visual Designer"
-      - "Brand Designer"
-      - "Digital Designer"
+      - "Aircraft Systems Engineer"
+      - "Avionics Systems Engineer"
+      - "Avionics Engineer"
+      - "Flight Controls Engineer"
+      - "Flight Control Systems Engineer"
+      - "Autoflight Systems Engineer"
+      - "Navigation Systems Engineer"
+      - "Aircraft Communications Engineer"
+      - "Integrated Modular Avionics Engineer"
+      - "Aircraft Systems Integration Engineer"
 
-    location: "France"
-
+    location: "Singapore"
     match_mode: any
 
     exclude:
-      - "stage"
-      - "stages"
       - "intern"
       - "internship"
-      - "alternance"
-      - "apprentissage"
-      - "CDD"
-      - "intérim"
+      - "trainee"
 
     remote_only: false
-
     recipients: []
-
     max_results: 25
-
     enabled: true
 
 
   # ==========================================
-  # SEARCH 2: JAKARTA, INDONESIA
+  # SEARCH 2: ELECTRICAL SYSTEMS
   # ==========================================
 
-  - name: "Graphic Designer - Jakarta"
+  - name: "Aircraft Electrical Systems - Singapore"
 
     keywords:
-      - "Graphic Designer"
-      - "Graphic Design"
-      - "Desainer Grafis"
-      - "Desain Grafis"
-      - "Visual Designer"
-      - "Brand Designer"
-      - "Digital Designer"
+      - "Aircraft Electrical Engineer"
+      - "Aircraft Electrical Systems Engineer"
+      - "Electrical Systems Engineer Aerospace"
+      - "Electrical Power Systems Engineer"
+      - "Aircraft Power Systems Engineer"
+      - "Aerospace Electrical Engineer"
+      - "Aircraft Lighting Systems Engineer"
+      - "Aircraft Starting Systems Engineer"
 
-    location: "Jakarta, Indonesia"
-
+    location: "Singapore"
     match_mode: any
 
     exclude:
       - "intern"
       - "internship"
-      - "magang"
       - "trainee"
 
     remote_only: false
-
     recipients: []
-
     max_results: 25
-
     enabled: true
 
 
-
   # ==========================================
-  # SEARCH 3 : TANGERANG, INDONESIA
+  # SEARCH 3: INSTRUMENTATION & DIAGNOSTICS
   # ==========================================
 
-  - name: "Graphic Designer - Tangerang"
+  - name: "Aircraft Instrumentation & Diagnostics - Singapore"
 
     keywords:
-      - "Graphic Designer"
-      - "Graphic Design"
-      - "Desainer Grafis"
-      - "Desain Grafis"
-      - "Visual Designer"
-      - "Brand Designer"
-      - "Digital Designer"
+      - "Aircraft Instrumentation Engineer"
+      - "Flight Data Systems Engineer"
+      - "Flight Data Recorder Engineer"
+      - "Aircraft Diagnostics Engineer"
+      - "Aircraft Health Monitoring Engineer"
+      - "Aircraft Maintenance Systems Engineer"
+      - "Aircraft Technical Support Engineer"
+      - "In-Service Support Engineer"
+      - "Aircraft Reliability Engineer"
+      - "Avionics Test Engineer"
 
-    location: "Tangerang, Indonesia"
-
+    location: "Singapore"
     match_mode: any
 
     exclude:
       - "intern"
       - "internship"
-      - "magang"
       - "trainee"
 
     remote_only: false
-
     recipients: []
-
     max_results: 25
+    enabled: true
 
+
+  # ==========================================
+  # SEARCH 4: ATR / SELETAR
+  # ==========================================
+
+  - name: "ATR - Singapore"
+
+    keywords:
+      - "ATR"
+
+    location: "Singapore"
+    match_mode: any
+
+    exclude:
+      - "intern"
+      - "internship"
+      - "trainee"
+
+    remote_only: false
+    recipients: []
+    max_results: 25
     enabled: true
 
 
 # ==========================================
-# NOTIFICATIONS
+# EMAIL NOTIFICATIONS
 # ==========================================
 
 notifications:
 
   email:
     enabled: true
-
     recipients: []
-
-    subject_prefix: "[New job bibi :3]"
-
+    subject_prefix: "[Aerospace Job Alert]"
     host: "smtp.gmail.com"
-
     port: 587
-
     use_ssl: false
 
   ntfy:
     enabled: false
-
     server: "https://ntfy.sh"
-
     topic: ""
-
     priority: default
 
 
@@ -144,9 +146,6 @@ notifications:
 settings:
 
   hours: 24
-
   request_delay_seconds: 3
-
   state_file: "state/seen_jobs.json"
-
   forget_after_days: 30
