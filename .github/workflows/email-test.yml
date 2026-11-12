@@ -46,6 +46,11 @@ jobs:
               timeout=30
           ) as server:
               server.starttls()
+              print("SMTP host:", os.environ["SMTP_HOST"])
+              print("SMTP port:", os.environ["SMTP_PORT"])
+              print("Username configured:", bool(os.environ["SMTP_USERNAME"]))
+              print("Password configured:", bool(os.environ["SMTP_PASSWORD"]))
+              print("Password length:", len(os.environ["SMTP_PASSWORD"]))
               server.login(
                   os.environ["SMTP_USERNAME"],
                   os.environ["SMTP_PASSWORD"]
