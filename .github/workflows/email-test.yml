@@ -1,0 +1,56 @@
+
+name: Test Aerospace Email
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-email:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Send test email
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          EMAIL_RECIPIENTS: ${{ secrets.EMAIL_RECIPIENTS }}
+        run: |
+          python - <<'PY'
+          import os
+          import smtplib
+          from email.message import EmailMessage
+
+          msg = EmailMessage()
+          msg["Subject"] = "[Aerospace Job Alert] Test email"
+          msg["From"] = os.environ["SMTP_FROM"] or os.environ["SMTP_USERNAME"]
+          msg["To"] = os.environ["EMAIL_RECIPIENTS"]
+          msg.set_content(
+              "Congratulations! Your Aerospace LinkedIn Job Hunter "
+              "can successfully send emails."
+          )
+
+          with smtplib.SMTP(
+              os.environ["SMTP_HOST"],
+              int(os.environ["SMTP_PORT"]),
+              timeout=30
+          ) as server:
+              server.starttls()
+              server.login(
+                  os.environ["SMTP_USERNAME"],
+                  os.environ["SMTP_PASSWORD"]
+              )
+              server.send_message(msg)
+
+          print("Test email sent successfully.")
+          PY
