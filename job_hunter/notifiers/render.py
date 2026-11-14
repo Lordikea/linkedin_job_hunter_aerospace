@@ -58,7 +58,7 @@ def as_text(jobs: list[Job]) -> str:
         "This message was sent automatically by your Aerospace LinkedIn Job Hunter.",
         "Good luck with your applications!",
     ])
-    return "\\n".join(lines).strip()
+    return "\n".join(lines).strip()
 
 
 def _job_html(job: Job) -> str:
