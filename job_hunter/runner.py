@@ -24,10 +24,18 @@ def collect_new_jobs(config: Config, store: SeenStore) -> list[Job]:
     )
     new_jobs: list[Job] = []
     seen_this_run: set[str] = set()
-    dropped_old = 0
-    dropped_far = 0
+    counts = {
+        "retrieved": 0,
+        "already_seen": 0,
+        "duplicate": 0,
+        "too_old": 0,
+        "excluded_location": 0,
+        "no_keyword_match": 0,
+    }
 
     for search in config.active_searches():
+        search_retrieved = 0
+        search_matches = 0
         for query in build_query(search.keywords, search.match_mode):
             try:
                 results = client.search(
@@ -38,48 +46,63 @@ def collect_new_jobs(config: Config, store: SeenStore) -> list[Job]:
                     remote_only=search.remote_only,
                 )
             except RateLimited as exc:
-                # Stop this search rather than hammering LinkedIn further; the
-                # next scheduled run picks the postings up again.
                 log.warning("%s: %s", search.name, exc)
                 break
-            except Exception as exc:  # network hiccup, layout change, ...
-                log.error("%s / '%s' araması başarısız: %s", search.name, query, exc)
+            except Exception as exc:
+                log.error("%s / '%s' search failed: %s", search.name, query, exc)
                 continue
 
             for job in results:
-                if job.id in store or job.id in seen_this_run:
-                    continue
+                counts["retrieved"] += 1
+                search_retrieved += 1
 
-                # LinkedIn pads thin result sets with older, far-away postings
-                # that its own filters should have excluded, so both are
-                # re-checked here instead of being taken on trust.
+                if job.id in store:
+                    counts["already_seen"] += 1
+                    continue
+                if job.id in seen_this_run:
+                    counts["duplicate"] += 1
+                    continue
                 if not is_recent(job.posted_at, job.posted_label, config.settings.hours):
-                    dropped_old += 1
+                    counts["too_old"] += 1
                     continue
                 if is_excluded_location(job.location, search.exclude_locations):
-                    dropped_far += 1
+                    counts["excluded_location"] += 1
                     continue
-                # Title only: a bank called "Türkiye Finans" would otherwise
-                # match every posting it publishes, whatever the role.
+
+                # Match both the role title and employer. This matters for
+                # company-specific searches such as ATR, where the employer
+                # name may not appear in the job title.
+                searchable_text = f"{job.title} {job.company}"
                 hits = matches(
-                    job.title,
+                    searchable_text,
                     search.keywords,
                     mode=search.match_mode,
                     exclude=search.exclude,
                 )
                 if not hits:
+                    counts["no_keyword_match"] += 1
                     continue
+
                 job.search_name = search.name
                 job.matched_keywords = hits
                 seen_this_run.add(job.id)
                 new_jobs.append(job)
+                search_matches += 1
 
-    if dropped_old or dropped_far:
         log.info(
-            "Elenen: %d ilan pencereden eski, %d ilan konum dışı",
-            dropped_old,
-            dropped_far,
+            "%s: retrieved %d listings; %d matched",
+            search.name,
+            search_retrieved,
+            search_matches,
         )
+
+    log.info(
+        "Search summary: %(retrieved)d retrieved, %(already_seen)d already seen, "
+        "%(duplicate)d duplicates, %(too_old)d outside date window, "
+        "%(excluded_location)d excluded by location, %(no_keyword_match)d "
+        "without a keyword match; %(matched)d new matches.",
+        {**counts, "matched": len(new_jobs)},
+    )
     return new_jobs
 
 
@@ -92,12 +115,10 @@ def is_excluded_location(location: str, terms: list[str]) -> bool:
 
 
 def notify(config: Config, jobs: list[Job]) -> list[str]:
-    """Send the digest through every enabled channel; return error messages."""
+    """Send the new-postings digest through every enabled channel."""
     errors: list[str] = []
 
     if config.email.enabled:
-        # One digest per address, holding only the searches that address asked
-        # for — nobody receives someone else's alerts.
         per_recipient: dict[str, list[Job]] = {}
         by_name = {s.name: s for s in config.searches}
         for job in jobs:
@@ -108,19 +129,24 @@ def notify(config: Config, jobs: list[Job]) -> list[str]:
                 per_recipient.setdefault(address, []).append(job)
 
         for address, address_jobs in per_recipient.items():
+            log.info(
+                "Sending %d matching job(s) to %s",
+                len(address_jobs),
+                address,
+            )
             try:
                 send_email(config.email, [address], address_jobs)
+                log.info("SMTP accepted the notification for %s", address)
             except EmailError as exc:
                 errors.append(str(exc))
-            except Exception as exc:  # malformed posting, encoding problem, ...
-                # One unusable posting must not cost everyone else their mail.
-                errors.append(f"{address} için gönderim başarısız: {exc!r}")
+            except Exception as exc:
+                errors.append(f"Email delivery to {address} failed: {exc!r}")
 
     if config.ntfy.enabled:
         try:
             send_ntfy(config.ntfy, jobs)
         except Exception as exc:
-            errors.append(f"ntfy gönderilemedi: {exc}")
+            errors.append(f"ntfy notification failed: {exc}")
 
     return errors
 
@@ -128,33 +154,32 @@ def notify(config: Config, jobs: list[Job]) -> list[str]:
 def run(config: Config, dry_run: bool = False) -> int:
     """Run one hunt. Returns the process exit code."""
     store = SeenStore(config.settings.state_file, config.settings.forget_after_days)
-    log.info("Kayıtlı ilan sayısı: %d", len(store))
+    log.info("Loaded %d previously seen job(s).", len(store))
 
     jobs = collect_new_jobs(config, store)
     if not jobs:
-        log.info("Yeni ilan yok.")
+        log.info("No new matching jobs. No notification email will be sent.")
         store.prune()
         store.save()
         return 0
 
-    log.info("%d yeni ilan bulundu.", len(jobs))
+    log.info("Found %d new matching job(s).", len(jobs))
     for job in jobs:
         log.info("  • %s — %s (%s)", job.title, job.company, job.url)
 
     if dry_run:
-        log.info("dry-run: bildirim gönderilmedi, kayıt dosyası güncellenmedi.")
+        log.info("Dry run: notifications were not sent and job history was not updated.")
         return 0
 
     errors = notify(config, jobs)
     if errors:
         for message in errors:
-            log.error(message)
-        # Nothing is marked as seen, so the next run retries these postings
-        # instead of silently dropping them.
+            log.error("%s", message)
         return 1
 
     for job in jobs:
         store.mark(job.id, job.title)
     store.prune()
     store.save()
+    log.info("Successfully processed and recorded %d job(s).", len(jobs))
     return 0
