@@ -17,7 +17,7 @@ def group_by_search(jobs: Iterable[Job]) -> dict[str, list[Job]]:
     return dict(grouped)
 
 
-_WHITESPACE = re.compile(r"\\s+")
+_WHITESPACE = re.compile(r"\s+")
 
 
 def one_line(value: str) -> str:
