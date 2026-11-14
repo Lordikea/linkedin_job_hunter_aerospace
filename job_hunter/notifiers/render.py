@@ -17,7 +17,7 @@ def group_by_search(jobs: Iterable[Job]) -> dict[str, list[Job]]:
     return dict(grouped)
 
 
-_WHITESPACE = re.compile(r"\s+")
+_WHITESPACE = re.compile(r"\\s+")
 
 
 def one_line(value: str) -> str:
@@ -25,36 +25,44 @@ def one_line(value: str) -> str:
     return _WHITESPACE.sub(" ", value or "").strip()
 
 
-def subject(jobs: list[Job], prefix: str = "[İlan]") -> str:
+def subject(jobs: list[Job], prefix: str = "[Aerospace Job Alert]") -> str:
     count = len(jobs)
     if count == 1:
         job = jobs[0]
-        title = job.title or "Yeni ilan"
-        company = f" – {job.company}" if job.company else ""
+        title = job.title or "Untitled position"
+        company = f" — {job.company}" if job.company else ""
         return one_line(f"{prefix} {title}{company}")
-    return f"{prefix} {count} new jobi jobi bibi princess :3"
+    return one_line(f"{prefix} {count} new aerospace job opportunities")
 
 
 def as_text(jobs: list[Job]) -> str:
-    lines: list[str] = []
+    lines: list[str] = [
+        "New job opportunities matching your aerospace job searches:",
+        "",
+    ]
     for search_name, group in group_by_search(jobs).items():
-        lines.append(f"## {search_name} ({len(group)} yeni ilan)")
+        lines.append(f"{search_name} ({len(group)} new)")
+        lines.append("-" * min(len(search_name) + 12, 72))
         for job in group:
-            lines.append(f"- {job.title or 'İsimsiz ilan'}")
+            lines.append(job.title or "Untitled position")
             details = " | ".join(
                 part for part in (job.company, job.location, job.posted_label) if part
             )
             if details:
-                lines.append(f"  {details}")
+                lines.append(details)
             if job.matched_keywords:
-                lines.append(f"  Eşleşen: {', '.join(job.matched_keywords)}")
-            lines.append(f"  {job.url}")
-        lines.append("")
-    return "\n".join(lines).strip()
+                lines.append(f"Matched keywords: {', '.join(job.matched_keywords)}")
+            lines.append(job.url)
+            lines.append("")
+    lines.extend([
+        "This message was sent automatically by your Aerospace LinkedIn Job Hunter.",
+        "Good luck with your applications!",
+    ])
+    return "\\n".join(lines).strip()
 
 
 def _job_html(job: Job) -> str:
-    title = html.escape(job.title or "İsimsiz ilan")
+    title = html.escape(job.title or "Untitled position")
     url = html.escape(job.url, quote=True)
     meta = " &middot; ".join(
         html.escape(part)
@@ -83,20 +91,20 @@ def as_html(jobs: list[Job]) -> str:
             f"""
       <h2 style="font-size:15px;color:#111827;margin:26px 0 4px;">
         {html.escape(search_name)}
-        <span style="color:#6b7280;font-weight:400;">({len(group)} jobz)</span>
+        <span style="color:#6b7280;font-weight:400;">({len(group)} new)</span>
       </h2>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">{rows}</table>"""
         )
 
     body = "".join(sections)
     return f"""<!doctype html>
-<html lang="tr"><body style="margin:0;background:#f9fafb;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+<html lang="en"><body style="margin:0;background:#f9fafb;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
   <div style="max-width:640px;margin:0 auto;padding:24px;background:#ffffff;">
     <p style="font-size:13px;color:#6b7280;margin:0 0 4px;">LinkedIn Job Hunter</p>
-    <h1 style="font-size:20px;color:#111827;margin:0;">{len(jobs)} new jobz bibi princess :3</h1>
+    <h1 style="font-size:20px;color:#111827;margin:0;">{len(jobs)} new aerospace job opportunities</h1>
     {body}
     <p style="color:#9ca3af;font-size:12px;margin-top:28px;border-top:1px solid #e5e7eb;padding-top:12px;">
-      Wabui bibi hawo kitty princess with a ribbon. Wish you the best of luck in this job hunt :3
+      This is an automated notification from your Aerospace LinkedIn Job Hunter.
     </p>
   </div>
 </body></html>"""
