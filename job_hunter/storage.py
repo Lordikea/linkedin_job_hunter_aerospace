@@ -12,9 +12,6 @@ class SeenStore:
         self.path = Path(path)
         self.forget_after_days = forget_after_days
         self._seen: dict[str, dict] = {}
-        # Only rewrite the file when the set of jobs actually changed; a
-        # timestamp-only rewrite creates a commit that collides with any other
-        # run doing the same thing.
         self._dirty = False
         self._load()
 
@@ -24,8 +21,6 @@ class SeenStore:
         try:
             data = json.loads(self.path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
-            # A corrupt state file must not silence the whole run; the cost is
-            # one round of repeat notifications.
             return
         if isinstance(data, dict):
             self._seen = data.get("jobs", {}) if "jobs" in data else data
@@ -50,7 +45,7 @@ class SeenStore:
             raw = (meta or {}).get("first_seen", "")
             try:
                 first_seen = datetime.fromisoformat(raw)
-            except ValueError:
+            except (TypeError, ValueError):
                 continue
             if first_seen.tzinfo is None:
                 first_seen = first_seen.replace(tzinfo=timezone.utc)
@@ -63,7 +58,7 @@ class SeenStore:
         return len(stale)
 
     def save(self) -> bool:
-        """Write the file when something changed; return whether it was written."""
+        """Write the file only when its contents have changed."""
         if not self._dirty and self.path.exists():
             return False
 
@@ -83,12 +78,7 @@ class SeenStore:
 
 
 def merge_seen(mine: dict, theirs: dict) -> dict:
-    """Combine two seen-job maps, keeping the earliest sighting of each job.
-
-    Two runs can finish at once and each writes its own copy of the file; the
-    union is always the right answer, since a job seen by either run has been
-    notified.
-    """
+    """Combine two seen-job maps, keeping the earliest sighting of each job."""
     merged = dict(theirs)
     for job_id, meta in mine.items():
         existing = merged.get(job_id)
@@ -100,8 +90,13 @@ def merge_seen(mine: dict, theirs: dict) -> dict:
     return merged
 
 
-def merge_state_files(mine: Path | str, theirs: Path | str, out: Path | str) -> int:
-    """Merge two state files on disk. Returns the resulting job count."""
+def merge_state_files(
+    mine: Path | str,
+    theirs: Path | str,
+    out: Path | str,
+    forget_after_days: int = 30,
+) -> int:
+    """Merge concurrent job histories and discard entries past their retention period."""
 
     def load(path: Path | str) -> dict:
         path = Path(path)
@@ -114,12 +109,33 @@ def merge_state_files(mine: Path | str, theirs: Path | str, out: Path | str) -> 
         return data.get("jobs", {}) if isinstance(data, dict) else {}
 
     merged = merge_seen(load(mine), load(theirs))
+    cutoff = datetime.now(timezone.utc) - timedelta(days=forget_after_days)
+    retained = {}
+    for job_id, meta in merged.items():
+        try:
+            first_seen = datetime.fromisoformat((meta or {}).get("first_seen", ""))
+        except (TypeError, ValueError):
+            # Keep records with unknown timestamps rather than accidentally
+            # forgetting jobs that may not have been notified successfully.
+            retained[job_id] = meta
+            continue
+        if first_seen.tzinfo is None:
+            first_seen = first_seen.replace(tzinfo=timezone.utc)
+        if first_seen >= cutoff:
+            retained[job_id] = meta
+
+    out_path = Path(out)
+    current = load(out_path)
+    if retained == current:
+        return len(retained)
+
     payload = {
         "updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "jobs": merged,
+        "jobs": retained,
     }
-    Path(out).write_text(
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True),
         encoding="utf-8",
     )
-    return len(merged)
+    return len(retained)
