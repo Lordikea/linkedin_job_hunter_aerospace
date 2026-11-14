@@ -36,6 +36,7 @@ def collect_new_jobs(config: Config, store: SeenStore) -> list[Job]:
     for search in config.active_searches():
         search_retrieved = 0
         search_matches = 0
+        rejected_examples: list[str] = []
         for query in build_query(search.keywords, search.match_mode):
             try:
                 results = client.search(
@@ -81,6 +82,10 @@ def collect_new_jobs(config: Config, store: SeenStore) -> list[Job]:
                 )
                 if not hits:
                     counts["no_keyword_match"] += 1
+                    if len(rejected_examples) < 5:
+                        rejected_examples.append(
+                            f"{job.title!r} | {job.company!r}"
+                        )
                     continue
 
                 job.search_name = search.name
@@ -95,6 +100,12 @@ def collect_new_jobs(config: Config, store: SeenStore) -> list[Job]:
             search_retrieved,
             search_matches,
         )
+        if rejected_examples:
+            log.info(
+                "%s: examples rejected by keyword matching: %s",
+                search.name,
+                " || ".join(rejected_examples),
+            )
 
     log.info(
         "Search summary: %(retrieved)d retrieved, %(already_seen)d already seen, "
