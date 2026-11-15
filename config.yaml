@@ -2,24 +2,23 @@
 searches:
 
   # ==========================================
-  # SEARCH 1: AVIONICS & FLIGHT CONTROLS
-  # Broader title terms catch role variants while Singapore remains the
-  # geographic filter. These cover avionics, ATA 22/23/34/42 and integration.
+  # SEARCH 1: AVIONICS / FLIGHT SYSTEMS
+  # Civil aviation engineering roles in Singapore.
   # ==========================================
 
-  - name: "Avionics & Flight Controls - Singapore"
+  - name: "Avionics & Flight Systems - Singapore"
 
     keywords:
       - "Avionics"
-      - "Flight Control"
+      - "Avionics Systems"
+      - "Aircraft Systems Engineer"
+      - "Aircraft Systems"
+      - "Flight Controls"
+      - "Flight Control Systems"
       - "Autoflight"
-      - "Navigation Systems"
+      - "Flight Management Systems"
+      - "Aircraft Navigation Systems"
       - "Aircraft Communications"
-      - "Integrated Modular Avionics"
-      - "Aircraft Systems"
-      - "Systems Integration"
-      - "Flight Management"
-      - "Avionics Test"
 
     location: "Singapore"
     match_mode: any
@@ -36,21 +35,23 @@ searches:
 
 
   # ==========================================
-  # SEARCH 2: ELECTRICAL SYSTEMS
-  # Covers ATA 24/33/80 and aircraft electrical power.
+  # SEARCH 2: CUSTOMER / TECHNICAL / PRODUCT SUPPORT
+  # Keep support searches tied to aircraft, avionics or aerospace.
   # ==========================================
 
-  - name: "Aircraft Electrical Systems - Singapore"
+  - name: "Aircraft & Avionics Customer Support - Singapore"
 
     keywords:
-      - "Aircraft Electrical"
-      - "Electrical Systems"
-      - "Electrical Power"
-      - "Power Systems"
-      - "Aircraft Power"
-      - "Aerospace Electrical"
-      - "Aircraft Lighting"
-      - "Aircraft Starting"
+      - "Avionics Support"
+      - "Aircraft Support Engineer"
+      - "Aircraft Customer Support"
+      - "Aircraft Technical Support"
+      - "Aircraft Product Support"
+      - "Aerospace Customer Support"
+      - "Aerospace Technical Support"
+      - "Aerospace Product Support"
+      - "In-Service Support Engineer"
+      - "Customer Support Avionics"
 
     location: "Singapore"
     match_mode: any
@@ -67,47 +68,23 @@ searches:
 
 
   # ==========================================
-  # SEARCH 3: INSTRUMENTATION & DIAGNOSTICS
-  # Covers ATA 31/45, flight data, maintenance and in-service support.
+  # SEARCH 3: AIRCRAFT / AEROSPACE SYSTEMS ENGINEERING
+  # Avoid generic "Systems Engineer" which brings IT and unrelated sectors.
   # ==========================================
 
-  - name: "Aircraft Instrumentation & Diagnostics - Singapore"
+  - name: "Aircraft Systems Engineering - Singapore"
 
     keywords:
-      - "Instrumentation"
-      - "Flight Data"
-      - "Diagnostics"
-      - "Health Monitoring"
-      - "Maintenance Systems"
-      - "Technical Support"
-      - "In-Service Support"
-      - "Reliability Engineer"
-      - "Test Engineer"
-      - "Aircraft Systems"
-
-    location: "Singapore"
-    match_mode: any
-
-    exclude:
-      - "intern"
-      - "internship"
-      - "trainee"
-
-    remote_only: false
-    recipients: []
-    max_results: 25
-    enabled: true
-
-
-  # ==========================================
-  # SEARCH 4: ATR / SELETAR
-  # Company name is included in local matching, not just the job title.
-  # ==========================================
-
-  - name: "ATR - Singapore"
-
-    keywords:
-      - "ATR"
+      - "Aircraft Systems Engineering"
+      - "Aircraft Systems Engineer"
+      - "Aerospace Systems Engineer"
+      - "Aviation Systems Engineer"
+      - "Aircraft System Integration"
+      - "Aircraft Systems Integration"
+      - "Aircraft Systems Support"
+      - "Avionics Systems Engineer"
+      - "Aircraft Electrical Systems"
+      - "Flight Systems Engineer"
 
     location: "Singapore"
     match_mode: any
