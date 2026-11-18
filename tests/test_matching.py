@@ -12,13 +12,11 @@ def test_tokenize_normalizes_punctuation():
 
 
 def test_any_mode_needs_one_keyword():
-    hits = matches("Kıdemli Finans Uzmanı", ["finans", "FP&A", "IFRS"], mode="any")
-    assert hits == ["finans"]
+    assert matches("Kıdemli Finans Uzmanı", ["finans", "FP&A", "IFRS"]) == ["finans"]
 
 
 def test_any_mode_reports_every_hit_in_config_order():
-    hits = matches("IFRS & FP&A Analisti", ["finans", "FP&A", "IFRS"], mode="any")
-    assert hits == ["FP&A", "IFRS"]
+    assert matches("IFRS & FP&A Analisti", ["finans", "FP&A", "IFRS"]) == ["FP&A", "IFRS"]
 
 
 def test_all_mode_requires_every_keyword():
@@ -28,25 +26,22 @@ def test_all_mode_requires_every_keyword():
 
 
 def test_exclude_vetoes_the_posting():
-    hits = matches("Finans Stajyeri", ["finans"], mode="any", exclude=["stajyer"])
-    assert hits == []
+    assert matches("Finans Stajyeri", ["finans"], exclude=["stajyer"]) == []
 
 
 def test_matching_is_case_and_accent_insensitive():
-    assert matches("FİNANS UZMANI", ["finans"], mode="any") == ["finans"]
+    assert matches("FİNANS UZMANI", ["finans"]) == ["finans"]
 
 
 def test_keyword_matches_a_longer_word_it_starts():
-    assert matches("Finansal Raporlama Uzmanı", ["finans"], mode="any") == ["finans"]
+    assert matches("Finansal Raporlama Uzmanı", ["finans"]) == ["finans"]
 
 
 def test_partial_word_does_not_leak_across_tokens():
-    # "IFRS" must not match inside an unrelated word run.
-    assert matches("Difrsavunma Uzmanı", ["IFRS"], mode="any") == []
+    assert matches("Difrsavunma Uzmanı", ["IFRS"]) == []
 
 
 def test_short_keywords_must_match_a_whole_word():
-    # "IT" with a suffix allowed would match İthalat, İtfaiye and İtibar.
     assert matches("IT Yöneticisi", ["IT"]) == ["IT"]
     assert matches("Kıdemli IT Uzmanı", ["IT"]) == ["IT"]
     assert matches("İthalat Uzmanı", ["IT"]) == []
@@ -67,3 +62,23 @@ def test_multi_word_keyword_matches_the_whole_phrase_only():
     assert matches("Kıdemli Bilgi Sistemleri Yöneticisi", keyword) == keyword
     assert matches("Bilgi Sistemleri Uzmanı", keyword) == []
     assert matches("Bilgi Teknolojileri Yöneticisi", keyword) == []
+
+
+def test_french_avionics_titles_match_english_search_keywords():
+    keywords = ["Avionics", "Avionics Systems", "Aircraft Systems Engineer"]
+    assert matches("Ingénieur système avionique H/F", keywords) == ["Avionics", "Aircraft Systems Engineer"]
+    assert matches("Ingénieur Études Systèmes Avioniques F/H", keywords) == [
+        "Avionics", "Avionics Systems", "Aircraft Systems Engineer"
+    ]
+
+
+def test_french_flight_controls_title_matches():
+    assert matches("Ingénieur spécialiste systèmes de commandes de vol", ["Flight Controls"]) == ["Flight Controls"]
+
+
+def test_french_customer_support_title_matches():
+    assert matches("Ingénieur support aéronautique", ["Aircraft Support Engineer"]) == ["Aircraft Support Engineer"]
+
+
+def test_exclusion_still_applies_to_french_alias_matches():
+    assert matches("Ingénieur système avionique - stage", ["Avionics"], exclude=["stage"]) == []
