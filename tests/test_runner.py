@@ -140,6 +140,8 @@ def test_company_include_filter_rejects_other_employers(monkeypatch, tmp_path):
         job("1", "Ingénieur avionique", "Airbus Operations SAS"),
         job("2", "Ingénieur avionique", "Thales"),
     ]
+    for item in jobs:
+        item.location = "Toulouse, France"
     stub_client(monkeypatch, jobs)
     found = runner.collect_new_jobs(
         make_config(keywords=["avionique"], location="Toulouse", company_include=["Airbus"]),
