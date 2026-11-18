@@ -18,6 +18,7 @@ ALIASES: dict[str, tuple[str, ...]] = {
     "aircraft systems engineer": (
         "ingénieur système aéronautique", "ingénieur systèmes aéronautiques",
         "ingénieur systèmes avioniques", "ingénieur système avionique",
+        "ingénieur études systèmes avioniques",
     ),
     "aircraft systems": ("systèmes aéronautiques",),
     "flight controls": ("commandes de vol", "systèmes de commandes de vol"),
