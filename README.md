@@ -1,340 +1,239 @@
-# LinkedIn Job Hunter
+# Aerospace LinkedIn Job Hunter
 
-LinkedIn'de **son 24 saatte yayınlanan** ilanları senin anahtar kelimelerine göre
-tarar, daha önce görmediklerini bulur ve sana **e-posta** gönderir.
+This bot searches LinkedIn's public job listings for roles matching your configured keywords, filters the results, avoids notifying you about the same listing twice, and sends matching opportunities by email.
 
-LinkedIn'de "en yeniden en eskiye" düzgün bir sıralama olmadığı için, iş şu:
-her 15 dakikada bir arka planda arama yapılır, yeni çıkan ilanlar tespit edilir
-ve sadece **daha önce bildirilmemiş** olanlar sana gelir.
+The bot is designed to run automatically through GitHub Actions, triggered by an external scheduler such as cron-job.org. It can also be run manually or locally.
 
-- En fazla **10 anahtar kelime** (ör. `finans`, `FP&A`, `IFRS`)
-- **Konum** seçilebilir (ör. `İstanbul, Türkiye`) — boş bırakırsan her yer
-- **GitHub Actions** üzerinde çalışır: bilgisayarın kapalıyken de tarar, ücretsiz
-- Aynı ilan iki kez gönderilmez
-- Birden fazla arama tanımlayıp **farklı kişilere farklı ilanlar** gönderebilirsin
+## Features
 
----
+- Search for up to **10 keywords per configured search**.
+- Restrict results by location, employer, and exclusion terms.
+- Support multiple independent searches and recipient lists.
+- Filter listings by posting date and avoid duplicate notifications.
+- Send notifications by email or optionally through ntfy.
+- Run without LinkedIn credentials by using LinkedIn's public guest job-search endpoint.
 
-## Kurulum (tek seferlik, ~10 dakika)
+## 1. Configure email delivery
 
-### 1. Gmail uygulama şifresi oluştur
+For Gmail, create an app password. Your regular Google account password will not work for SMTP.
 
-E-postayı gönderecek hesabın normal şifresi işe yaramaz; Google "uygulama şifresi"
-istiyor.
+1. Enable two-step verification on your Google account: <https://myaccount.google.com/signinoptions/two-step-verification>.
+2. Create an app password: <https://myaccount.google.com/apppasswords>.
+3. Copy the generated 16-character password and store it securely.
 
-1. Google hesabında **iki adımlı doğrulamayı** aç (zorunlu):
-   <https://myaccount.google.com/signinoptions/two-step-verification>
-2. <https://myaccount.google.com/apppasswords> adresine git, bir isim yaz
-   (ör. `ilan-takip`), oluştur.
-3. Çıkan **16 haneli şifreyi** kopyala. Bir daha gösterilmez.
+For another email provider, use its SMTP server and port instead. For example, Outlook commonly uses `smtp.office365.com` on port `587`.
 
-> Gmail kullanmıyorsan sağlayıcının SMTP bilgilerini `SMTP_HOST` / `SMTP_PORT`
-> secret'larıyla verebilirsin. Outlook: `smtp.office365.com` / `587`.
+## 2. Add GitHub Actions secrets
 
-### 2. Secret'ları GitHub'a ekle
+In the repository, open **Settings → Secrets and variables → Actions → New repository secret** and add:
 
-Repo sayfasında **Settings → Secrets and variables → Actions → New repository secret**
-yolunu izleyip şunları ekle:
+| Secret | Purpose | Required |
+|---|---|---|
+| `SMTP_USERNAME` | Email account used to send notifications | Yes |
+| `SMTP_PASSWORD` | SMTP password or Gmail app password | Yes |
+| `SMTP_HOST` | SMTP server (defaults to `smtp.gmail.com`) | No |
+| `SMTP_PORT` | SMTP port (defaults to `587`) | No |
+| `SMTP_FROM` | Optional sender address; otherwise the username is used | No |
+| `EMAIL_RECIPIENTS` | Comma-separated notification recipients | Recommended |
+| `NTFY_TOPIC` | ntfy topic, only if ntfy notifications are enabled | Only for ntfy |
 
-| Secret adı      | Değer                                          | Zorunlu |
-|-----------------|------------------------------------------------|---------|
-| `SMTP_USERNAME` | Gönderen Gmail adresin                         | Evet    |
-| `SMTP_PASSWORD` | Yukarıda aldığın 16 haneli uygulama şifresi    | Evet    |
-| `SMTP_HOST`     | `smtp.gmail.com` (Gmail dışıysa değiştir)      | Hayır   |
-| `SMTP_PORT`     | `587`                                           | Hayır   |
-| `SMTP_FROM`     | Farklı bir "gönderen" adresi istiyorsan        | Hayır   |
-| `EMAIL_RECIPIENTS` | Bildirimin gideceği adres(ler), virgülle ayrılmış | Hayır* |
-| `NTFY_TOPIC`    | Sadece ntfy'yi açtıysan                        | Hayır   |
+**Keep email addresses and credentials out of committed files.** If this repository is public, anything written directly in `config.yaml` can be viewed by anyone. Leave each search's `recipients` list empty and store recipient addresses in the `EMAIL_RECIPIENTS` GitHub secret.
 
-\* **Bu repo herkese açık (public).** `config.yaml` içine yazdığın her şeyi
-herkes görebilir — e-posta adresin dahil. Adresini repoda göstermek istemiyorsan
-`config.yaml` içindeki `recipients` listesini boş bırak ve adres(ler)ini
-`EMAIL_RECIPIENTS` secret'ı olarak ver:
-`senin-adresin@gmail.com,arkadasin@gmail.com`. Secret'lar repoda görünmez.
+For example:
 
-> Repoyu **private** yapmayı da düşünebilirsin, ama dikkat: private repolarda
-> GitHub Actions ayda 2000 dakika ücretsizdir ve 10 dakikalık tarama bu sınırı
-> aşar. Public repoda Actions dakikası sınırsızdır. Bu yüzden önerim: repo public
-> kalsın, kişisel bilgi `EMAIL_RECIPIENTS` secret'ında dursun.
-
-Şifre asla `config.yaml` içine yazılmaz; secret'lar repoda görünmez.
-
-### 3. `config.yaml` dosyasını düzenle
-
-En az şunları değiştir:
-
-```yaml
-searches:
-  - name: "Finans / FP&A"
-    keywords: [finans, "FP&A", IFRS]     # en fazla 10 tane
-    location: "İstanbul, Türkiye"
-    match_mode: any                       # any = herhangi biri, all = hepsi
-    exclude: [stajyer, intern]            # bu kelimeler geçerse gönderme
-
-notifications:
-  email:
-    recipients: []      # adresini EMAIL_RECIPIENTS secret'ında tut (yukarı bak)
+```text
+alerts@example.com,another@example.com
 ```
 
-### 4. Actions'ı aç ve test et
+Never commit SMTP passwords, app passwords, personal access tokens, or other credentials.
 
-1. Repo'da **Actions** sekmesine gir, uyarı çıkarsa workflow'ları etkinleştir.
-2. **LinkedIn ilan taraması** workflow'unu seç → **Run workflow**.
-   İlk denemede `dry_run` kutusunu işaretlersen e-posta gitmez, sadece bulunan
-   ilanlar log'a yazılır — ayarları kontrol etmenin en kolay yolu.
-3. Log'da ilanları görüyorsan `dry_run` olmadan bir kez daha çalıştır; e-posta
-   gelmeli.
+## 3. Configure searches
 
-Bundan sonra **her 15 dakikada bir** kendi kendine çalışır.
+Edit `config.yaml`. The current configuration contains two searches:
 
-> **Önemli:** GitHub, zamanlanmış (cron) çalıştırmayı **sadece deponun varsayılan
-> (default) branch'inde** yapar. Bu kod bir feature branch'te duruyorsa, otomatik
-> tarama başlamaz — kodu varsayılan branch'e (`main`) birleştir.
-> Ayrıca 60 gün boyunca repoda hiç aktivite olmazsa GitHub zamanlayıcıyı
-> durdurur; kayıt dosyası her taramada güncellendiği için normalde bu olmaz.
+- **Airbus Toulouse:** French-language avionics engineering listings in Toulouse, restricted to employers whose company name contains `Airbus`.
+- **Singapore civil aviation avionics engineering:** a broader set of civil aviation systems, avionics, flight controls, and technical support roles in Singapore.
 
----
+The main search fields are:
 
-## Zamanlanmış tarama çalışmıyorsa: dışarıdan tetikleme
-
-GitHub'ın cron zamanlayıcısı garantili değildir. Yeni depolarda saatlerce hiç
-devreye girmediği, yoğun saatlerde turları atladığı olur. Actions sayfasındaki
-**Event** menüsünde `schedule` seçeneği hiç belirmiyorsa durum budur.
-
-Çözüm: ücretsiz bir cron servisinden GitHub'a tetikleme isteği göndermek.
-GitHub'ın kendi zamanlayıcısına hiç bağlı kalmazsın.
-
-### 1. Erişim anahtarı (token) oluştur
-
-<https://github.com/settings/personal-access-tokens/new>
-
-- **Token name:** `ilan-tetikleyici`
-- **Expiration:** 90 gün (süresi dolunca yenilemen gerekir)
-- **Repository access:** *Only select repositories* → `linkedin_job_hunter`
-- **Permissions → Repository permissions → Actions:** `Read and write`
-  (Başka hiçbir izin verme.)
-- **Generate token** → çıkan `github_pat_...` değerini kopyala.
-
-Bu anahtar yalnızca bu depodaki workflow'ları çalıştırabilir. Kod okuyamaz,
-değiştiremez, secret'lara erişemez. En kötü ihtimalle biri fazladan tarama
-başlatır.
-
-### 2. cron-job.org'da görev oluştur
-
-<https://console.cron-job.org> (ücretsiz hesap yeterli) → **Create cronjob**
-
-| Alan | Değer |
+| Field | Meaning |
 |---|---|
-| Title | `LinkedIn ilan taraması` |
-| URL | `https://api.github.com/repos/<kullanıcı>/<repo>/actions/workflows/job-hunt.yml/dispatches` |
-| Schedule | Every 15 minutes |
+| `name` | Display name for the search |
+| `keywords` | LinkedIn search terms; maximum 10 per search |
+| `location` | Target location |
+| `company_include` | Optional company-name allowlist |
+| `match_mode` | `any` matches at least one keyword; `all` requires every keyword |
+| `exclude` | Terms that disqualify a listing |
+| `exclude_locations` | Locations to exclude |
+| `remote_only` | Apply LinkedIn's remote-workplace filter |
+| `recipients` | Optional addresses for this search only |
+| `max_results` | Maximum number of results returned for each LinkedIn query |
+| `enabled` | Set to `false` to pause a search |
 
-**Advanced** bölümünde:
+Keyword matching is currently performed against the **job title**, not the full job description. French equivalents for selected aerospace terms are also checked locally. The employer filter checks the company name returned on the listing; it does not verify a specific Airbus facility or legal entity.
 
-- **Request method:** `POST`
-- **Request body:** `{"ref":"main"}`
-- **Headers:**
-  ```
-  Accept: application/vnd.github+json
-  Authorization: Bearer github_pat_BURAYA_ANAHTARIN
-  X-GitHub-Api-Version: 2022-11-28
-  Content-Type: application/json
-  ```
+## 4. Run the workflow
 
-**Create** ile kaydet. Başarılı istek **204** döner (gövde boş olur, normaldir).
+Open the repository's **Actions** tab and select **LinkedIn Job Search**.
 
-### 3. Doğrula
+Choose **Run workflow**. For a safe test, enable `dry_run`. This searches and logs matching listings but does not send notifications or update the seen-job history.
 
-15-20 dakika sonra Actions sayfasında yeni çalışmalar görünmeli. Tetikleyicileri
-yine `workflow_dispatch` yazar — cron-job.org, elle basmışsın gibi tetikler.
+Once the results look correct, run it again with `dry_run` disabled.
 
-Workflow'da GitHub'ın kendi `schedule` tetikleyicisi **bilerek yok**. Bu depoda
-saatlerce hiç çalışmadı, sonra devreye girdi ve ikinci bir tetikleyici hâline
-geldi; iki kaynak birden tetikleyince turlar üst üste binip kayıt dosyasında
-çakışmaya yol açtı. Tek tetikleyici (cron-job.org) daha öngörülebilir.
+The workflow also supports these optional inputs:
 
----
+- `only_search`: run only the search whose name contains the supplied text.
+- `hours`: override the configured posting-age window for this run.
+- `max_results`: override the maximum results per query for this run.
 
-## Kendi bilgisayarında çalıştırmak (opsiyonel)
+## 5. Schedule automatic runs
+
+The GitHub Actions workflow is intentionally configured for manual dispatch and does **not** use GitHub's built-in `schedule` trigger. This repository has used cron-job.org as its external scheduler.
+
+To configure an external scheduler:
+
+1. Create a fine-grained personal access token at <https://github.com/settings/personal-access-tokens/new>.
+2. Grant access only to this repository and give it **Actions: Read and write** permission.
+3. Store the token securely in the scheduler; do not commit it to the repository.
+4. Create a cron-job.org job that sends a `POST` request to:
+
+   ```text
+   https://api.github.com/repos/Lordikea/linkedin_job_hunter_aerospace/actions/workflows/job-hunt.yml/dispatches
+   ```
+
+5. Use this request body:
+
+   ```json
+   {"ref":"main"}
+   ```
+
+6. Add these headers:
+
+   ```text
+   Accept: application/vnd.github+json
+   Authorization: Bearer YOUR_GITHUB_TOKEN
+   X-GitHub-Api-Version: 2022-11-28
+   Content-Type: application/json
+   ```
+
+Set the schedule to the desired interval (the previously configured interval was 15 minutes). A successful GitHub workflow-dispatch request normally returns HTTP `204`.
+
+The workflow uses a concurrency lock to prevent overlapping runs from processing the same job history at the same time.
+
+## 6. Run locally
+
+Install the dependencies:
 
 ```bash
 pip install -r requirements.txt
-
-export SMTP_HOST=smtp.gmail.com
-export SMTP_USERNAME=senin-adresin@gmail.com
-export SMTP_PASSWORD=uygulama-sifresi
-export EMAIL_RECIPIENTS=senin-adresin@gmail.com
-
-python -m job_hunter --config config.yaml --dry-run   # deneme
-python -m job_hunter --config config.yaml             # gerçek gönderim
 ```
 
----
+Set the required environment variables. For example, in a Bash shell:
 
-## Arkadaşlarına vermek
+```bash
+export SMTP_HOST=smtp.gmail.com
+export SMTP_USERNAME=your-address@gmail.com
+export SMTP_PASSWORD=your-app-password
+export EMAIL_RECIPIENTS=your-address@gmail.com
+```
 
-İki yolu var:
+Run a dry test:
 
-**A) Aynı kurulumdan herkese gönder (en kolay).**
-Arkadaşın hiçbir şey yapmaz. Sen onun için ayrı bir arama tanımlarsın; kendi
-anahtar kelimelerini ve konumunu alır, e-posta doğrudan ona gider.
+```bash
+python -m job_hunter --config config.yaml --dry-run
+```
 
-Adresini `config.yaml`'a yazma — repo herkese açıksa adres de açık olur. Bunun
-yerine adresi bir secret olarak ekle (ör. `AYSE_EMAIL`) ve adını
-`recipients_secret` alanına yaz:
+Run with email notifications enabled:
+
+```bash
+python -m job_hunter --config config.yaml
+```
+
+Use `--verbose` (or `-v`) for detailed logs. Use `--hours 48` to widen the posting-age window for a one-off run, or `--only-search Singapore` to run a single configured search.
+
+## 7. Send different searches to different people
+
+A search can have its own `recipients` list. You can also use a dedicated GitHub secret through `recipients_secret`.
+
+For example:
 
 ```yaml
 searches:
-  - name: "Benim aramam"
-    keywords: [finans, "FP&A", IFRS]
-    location: "İstanbul, Türkiye"
-    # kendi recipients'ı yok → EMAIL_RECIPIENTS secret'ındaki adres(ler)e gider
+  - name: "My search"
+    keywords: ["avionics"]
+    location: "Singapore"
+    recipients: []
 
-  - name: "Ayşe – denetim"
-    keywords: ["internal audit", denetim]
-    location: "Ankara, Türkiye"
-    recipients_secret: AYSE_EMAIL    # sadece bu adrese gider
+  - name: "A colleague's search"
+    keywords: ["flight controls"]
+    location: "Toulouse"
+    recipients_secret: COLLEAGUE_EMAIL
     enabled: true
 ```
 
-> **Önemli:** Yeni bir `recipients_secret` eklediğinde, aynı secret'ı
-> `.github/workflows/job-hunt.yml` dosyasındaki `env:` listesine de eklemelisin
-> (`AYSE_EMAIL: ${{ secrets.AYSE_EMAIL }}` gibi). GitHub secret'ları
-> kendiliğinden uygulamaya geçirmez; unutulursa tarama hata verip durur.
+If you add a `recipients_secret`, add the same secret to the `env` section of `.github/workflows/job-hunt.yml`, for example:
 
-Dağıtım kuralı: bir aramanın kendi alıcısı varsa sonuçlar **yalnızca** ona
-gider; yoksa `notifications.email.recipients` / `EMAIL_RECIPIENTS`'taki genel
-adreslere düşer. Yani kimse başkasının ilanlarını almaz ve kimse diğerinin
-adresini görmez.
+```yaml
+COLLEAGUE_EMAIL: ${{ secrets.COLLEAGUE_EMAIL }}
+```
 
-**Birini durdurmak** (iş buldu, ara vermek istiyor): aramayı silmene gerek yok,
-`enabled: false` yeter. Kelimeleri yerinde kalır, tekrar başlarken `true`
-yaparsın.
+A search with its own recipient list sends only to those recipients. A search without its own recipients uses the global `notifications.email.recipients` or `EMAIL_RECIPIENTS` list.
 
-**B) Repoyu fork'lasınlar.**
-Arkadaşın repoyu fork'lar, kendi Gmail uygulama şifresini kendi secret'ı olarak
-ekler, `config.yaml`'ı kendine göre düzenler. Tamamen bağımsız çalışır — senin
-Gmail hesabını ve kotanı kullanmaz. Birden fazla kişi olacaksa bu yol daha temiz.
+To pause a search without deleting its settings, set `enabled: false`.
 
----
+## 8. Optional ntfy notifications
 
-## Bildirimi başka bir kanala almak
-
-Kod, bildirim kanallarını ayrı tutuyor; `config.yaml` üzerinden açılıp kapanır.
-
-**ntfy (telefona anlık push)** hazır ama **varsayılan olarak kapalı**. Açmadan
-önce bilmen gereken: `ntfy.sh` üzerinde konu (topic) adları şifresizdir —
-konu adını bilen veya tahmin eden herkes bildirimlerini okuyabilir, hatta o
-konuya sahte bildirim gönderebilir. Konu adı fiilen şifren demektir. Açacaksan
-tahmin edilemeyecek bir isim seç (ör. `ilanlar-8f3k92xq`) veya ntfy'yi kendi
-sunucunda barındır.
+ntfy push notifications are available but disabled by default. To enable them:
 
 ```yaml
 notifications:
   ntfy:
     enabled: true
-    topic: "ilanlar-8f3k92xq"
+    topic: "choose-a-long-random-topic-name"
 ```
 
-Discord/Slack webhook gibi kanallar da aynı yapıya kolayca eklenebilir:
-`job_hunter/notifiers/` altına yeni bir dosya, `runner.notify` içine bir çağrı.
+If the topic is hosted on the public `ntfy.sh` service, anyone who knows or guesses the topic name may be able to read notifications or publish messages to it. Use a long, unpredictable topic name or host your own ntfy server. Store the topic in the `NTFY_TOPIC` GitHub secret when possible.
 
----
+## How the bot works and important limitations
 
-## Neden Vercel değil?
+- **No official LinkedIn jobs API is used.** The bot reads LinkedIn's public guest job-search pages. LinkedIn may change these pages or temporarily rate-limit requests.
+- **Requests are deliberately paced.** The configured delay between requests defaults to three seconds. If LinkedIn returns HTTP 429, the current search is stopped rather than repeatedly sending requests.
+- **Results are checked locally.** LinkedIn's own location and date filters may return irrelevant results, so the bot applies additional checks before notifying you.
+- **Posting dates may be approximate.** LinkedIn often provides a date without a precise time. The age filter includes a one-day allowance to avoid dropping genuinely recent listings.
+- **Keyword matching uses job titles only.** The full description is not fetched. A role whose title does not contain a configured keyword may therefore be missed even if the description mentions relevant skills.
+- **Location matching is explicit.** A listing must contain the configured target location. Excluded locations are also checked against the configured exclusion list.
+- **Company matching is a name filter.** For searches using `company_include`, the returned company name must contain one of the configured terms.
+- **Duplicate notifications are avoided.** Successfully notified listings are stored in `state/seen_jobs.json`. The workflow merges concurrent state updates before saving the file.
+- **Failed email delivery does not mark jobs as sent.** The next run can retry those listings.
+- **Do not remove the concurrency lock casually.** Overlapping runs could send duplicate notifications or interfere with the shared history file.
 
-- Vercel'in ücretsiz planında **cron günde sadece 1 kez** çalışır; 10 dakikada
-  bir tarama oradan mümkün değil.
-- Vercel fonksiyonları durumsuzdur — "bu ilanı zaten gönderdim" kaydı için ayrıca
-  bir veritabanı bağlamak gerekir.
-- Ortada bir web sitesi yok; bu, arka planda çalışan bir görev.
+## Project structure
 
-GitHub Actions bu üç sorunun üçünü de çözüyor: sık cron, repoya yazılabilen kalıcı
-kayıt, sıfır ek servis.
-
----
-
-## GitHub kesintilerinde ne olur
-
-Tarama aynı anda iki kez çalışmasın diye workflow'da bir kilit var
-(`concurrency`). Normalde görünmez: tarama ~3,5 dakika sürer, tetikleme aralığı
-15 dakikadır, çakışma olmaz.
-
-GitHub'ın Actions sunucuları yavaşladığında bu kilidin bir yan etkisi ortaya
-çıkar: iş sıraya girer, başlayamadan bir sonraki tetikleme gelir ve **bekleyen
-iş iptal edilir**. Sıra bekleme süresi tetikleme aralığını aşarsa hiçbir tarama
-başlayamaz. 13 Eylül 2026'daki GitHub kesintisinde bu yaşandı.
-
-Kilidi kaldırmak çözüm değil, daha kötüsünü yapar: biriken işler aynı anda
-başlar, hepsi aynı "yeni ilan" listesini görür ve herkese **aynı e-postayı
-defalarca** gönderir. Şimdiki davranış güvenli tarafta hata veriyor — tarama
-yapılmaz ama yanlış bir şey de olmaz, kayıt bozulmaz.
-
-Kesinti uzarsa yapılabilecek geçici müdahale: cron-job.org'da aralığı 15
-dakikadan 45 dakikaya çıkarmak. Böylece bekleyen iş iptal edilmeden başlamaya
-fırsat bulur. Kesinti bitince 15 dakikaya geri alınır.
-
-Kesinti **24 saati** aşarsa, bu sürede yayınlanan ilanlar "son 24 saat"
-penceresinden düşer ve bir daha görünmez. O durumda `settings.hours` değerini
-geçici olarak 48 yapmak kaçanları toplar.
-
-## Bilinmesi gerekenler
-
-- **LinkedIn'in resmî bir iş ilanı API'si yok.** Bu araç, LinkedIn'in giriş
-  yapmadan görünen arama sayfasını okur. Kişisel ölçekte ve düşük istek
-  sıklığında çalışır; tarama sıklığını çok artırırsan LinkedIn istekleri geçici
-  olarak sınırlayabilir. Varsayılan ayar 15 dakikada bir tarama ve istekler arası
-  3 saniye bekleme. 3 anahtar kelimeyle bu, saatte ~12 istek eder — düşük bir
-  sayı, sorun çıkarması beklenmez. Yine de LinkedIn 429 döndürürse tarama o tur
-  için durur ve bir sonraki turda kaldığı yerden devam eder, ilan kaçmaz.
-- **Cron aralığını kısaltmak işe yaramaz.** GitHub'ın zamanlayıcısı garantili
-  değildir: yoğun saatlerde çalışmalar gecikir, bazı turlar hiç çalışmayabilir.
-  Yeni depolarda zamanlayıcının devreye girmesi saatler sürebiliyor; bu süre
-  boyunca Actions sekmesinden **Run workflow** ile elle çalıştırabilirsin.
-- **LinkedIn'in kendi filtreleri güvenilir değil.** Bir anahtar kelime için
-  aranan konumda son 24 saatte az ilan varsa, LinkedIn boş sayfa döndürmek
-  yerine listeyi yurt dışından ve günler öncesinden ilanlarla dolduruyor; kendi
-  tarih ve konum filtrelerini yok sayıyor. Bu yüzden gelen her ilanın yaşı ve
-  konumu yerelde bir kez daha kontrol edilir: pencereden eski olanlar ve
-  `exclude_locations` listesindeki ülkelerden gelenler elenir. Kaç ilanın
-  elendiği log'a yazılır.
-- Yaş kontrolü ilan kartındaki tarihe bakar. O tarihte saat bilgisi olmadığı
-  için bir gün tolerans bırakılmıştır: 24 saatlik pencerede 48 saate kadar ilan
-  geçebilir, ama "5 gün önce" olanlar geçemez.
-- Konum elemesi bir **kara listedir**, kusursuz değil: listede olmayan bir
-  ülkeden ilan gelirse geçer. Yeni bir ülke görürsen `config.yaml` içindeki
-  `exclude_locations` listesine ekle.
-- LinkedIn sayfa yapısını değiştirirse tarama boş dönebilir. Bu durumda log'a
-  `hiç ilan kartı ayrıştırılamadı` uyarısı düşer — sessizce sus pus olmaz.
-- Eşleşme yalnızca **ilan başlığı** üzerinden yapılır; ilan metninin tamamı
-  okunmaz (bu, ilan başına ayrı bir istek demek olurdu). Şirket adına bakılmaz:
-  aksi halde adında "Finans" geçen bir bankanın her ilanı eşleşirdi.
-- Anahtar kelime, kelimenin başından eşleşir: `finans` yazınca "Finansal
-  Raporlama" da gelir, ama alakasız bir kelimenin ortasındaki harf dizisi
-  eşleşmez. Büyük/küçük harf ve Türkçe karakter farkı önemsizdir
-  (`İSTANBUL` = `istanbul`).
-- E-posta gönderilemezse ilanlar "görüldü" olarak işaretlenmez; bir sonraki
-  tarama aynı ilanları tekrar dener, kaçmaz.
-
-## Proje yapısı
-
-```
+```text
 job_hunter/
-  cli.py          komut satırı girişi
-  config.py       config.yaml okuma ve doğrulama (5 kelime sınırı burada)
-  linkedin.py     LinkedIn arama isteği ve ilan kartlarının ayrıştırılması
-  matching.py     anahtar kelime eşleştirme (any / all / exclude)
-  storage.py      daha önce bildirilen ilanların kaydı
-  runner.py       tarama → eşleştirme → bildirim akışı
-  notifiers/      e-posta, ntfy ve e-posta içeriğinin şablonu
+  cli.py                    Command-line entry point
+  config.py                 Configuration loading and validation
+  freshness.py              Posting-age checks
+  linkedin.py               LinkedIn search requests and listing parsing
+  matching.py               Keyword and exclusion matching
+  storage.py                Previously notified job history
+  runner.py                 Search, filtering, and notification workflow
+  notifiers/
+    email_notifier.py       Email delivery
+    ntfy_notifier.py        Optional ntfy push notifications
+    render.py               Plain-text and HTML email templates
 .github/workflows/
-  job-hunt.yml    her 30 dakikada bir çalışan tarama
-  tests.yml       testler
-config.yaml       senin ayarların
-state/            görülen ilanların kaydı (otomatik güncellenir)
+  job-hunt.yml              Main job-search workflow
+  email-test.yml            Manual SMTP test workflow
+  tests.yml                 Automated test workflow
+config.yaml                 Search and notification settings
+state/                      Persisted job history
+tests/                      Automated tests
 ```
 
-## Testler
+## Run the tests
+
+Install development dependencies and run the test suite:
 
 ```bash
 pip install -r requirements-dev.txt
