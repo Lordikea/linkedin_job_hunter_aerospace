@@ -133,3 +133,16 @@ def test_one_broken_recipient_does_not_block_the_others(monkeypatch):
     errors = runner.notify(config, [my_job, their_job])
     assert delivered == ["friend@example.com"]
     assert len(errors) == 1
+
+
+def test_company_include_filter_rejects_other_employers(monkeypatch, tmp_path):
+    jobs = [
+        job("1", "Ingénieur avionique", "Airbus Operations SAS"),
+        job("2", "Ingénieur avionique", "Thales"),
+    ]
+    stub_client(monkeypatch, jobs)
+    found = runner.collect_new_jobs(
+        make_config(keywords=["avionique"], location="Toulouse", company_include=["Airbus"]),
+        SeenStore(tmp_path / "s.json"),
+    )
+    assert [j.id for j in found] == ["1"]
