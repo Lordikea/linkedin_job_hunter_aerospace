@@ -20,7 +20,7 @@ searches:
       - "Aircraft Navigation Systems"
       - "Aircraft Communications"
 
-    location: "Singapore"
+    location: "France"
     match_mode: any
 
     exclude:
@@ -53,7 +53,7 @@ searches:
       - "In-Service Support Engineer"
       - "Customer Support Avionics"
 
-    location: "Singapore"
+    location: "France"
     match_mode: any
 
     exclude:
@@ -86,7 +86,7 @@ searches:
       - "Aircraft Electrical Systems"
       - "Flight Systems Engineer"
 
-    location: "Singapore"
+    location: "France"
     match_mode: any
 
     exclude:
