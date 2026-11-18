@@ -30,12 +30,12 @@ def _validate(config: EmailConfig, recipients: list[str]) -> None:
     ]
     if missing:
         raise EmailError(
-            "E-posta gönderilemedi, eksik ayar: "
+            "Could not send email; missing configuration: "
             + ", ".join(missing)
-            + ". Bunları GitHub Actions secrets olarak (ya da lokalde .env ile) tanımla."
+            + ". Configure these as GitHub Actions secrets (or locally in a .env file)."
         )
     if not recipients:
-        raise EmailError("E-posta gönderilemedi: alıcı listesi boş.")
+        raise EmailError("Could not send email: the recipient list is empty.")
 
 
 def send_email(config: EmailConfig, recipients: list[str], jobs: list[Job]) -> None:
@@ -62,10 +62,10 @@ def send_email(config: EmailConfig, recipients: list[str], jobs: list[Job]) -> N
             server.send_message(message)
     except smtplib.SMTPAuthenticationError as exc:
         raise EmailError(
-            "SMTP girişi reddedildi. Gmail kullanıyorsan normal şifreni değil, "
-            "iki adımlı doğrulama açıkken oluşturulan 'uygulama şifresi'ni kullan."
+            "SMTP authentication was rejected. If you use Gmail, do not use your regular password; "
+            "use an 'app password' generated while two-step verification is enabled."
         ) from exc
     except (smtplib.SMTPException, OSError) as exc:
-        raise EmailError(f"SMTP hatası: {exc}") from exc
+        raise EmailError(f"SMTP error: {exc}") from exc
 
-    log.info("%d ilan %s adresine e-postalandı", len(jobs), ", ".join(recipients))
+    log.info("Emailed %d job listing(s) to %s", len(jobs), ", ".join(recipients))
