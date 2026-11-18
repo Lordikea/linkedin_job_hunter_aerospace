@@ -29,6 +29,7 @@ class Search:
     max_results: int = 25
     enabled: bool = True
     exclude_locations: list[str] = field(default_factory=list)
+    company_include: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -148,6 +149,9 @@ def _load_search(raw: dict[str, Any], index: int) -> Search:
         enabled=enabled,
         exclude_locations=[
             term.strip() for term in _as_list(raw.get("exclude_locations")) if term.strip()
+        ],
+        company_include=[
+            term.strip() for term in _as_list(raw.get("company_include")) if term.strip()
         ],
     )
 
