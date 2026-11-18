@@ -30,6 +30,7 @@ def collect_new_jobs(config: Config, store: SeenStore) -> list[Job]:
         "duplicate": 0,
         "too_old": 0,
         "excluded_location": 0,
+        "outside_target_location": 0,
         "no_keyword_match": 0,
     }
 
@@ -69,6 +70,13 @@ def collect_new_jobs(config: Config, store: SeenStore) -> list[Job]:
                 if is_excluded_location(job.location, search.exclude_locations):
                     counts["excluded_location"] += 1
                     continue
+                if search.location and not is_target_location(job.location, search.location):
+                    counts["outside_target_location"] += 1
+                    if len(rejected_examples) < 5:
+                        rejected_examples.append(
+                            f"OUTSIDE LOCATION: {job.title!r} | {job.company!r} | {job.location!r}"
+                        )
+                    continue
 
                 # Relevance is determined by the role title, not the employer.
                 # Matching company names caused unrelated vacancies at an
@@ -83,7 +91,7 @@ def collect_new_jobs(config: Config, store: SeenStore) -> list[Job]:
                     counts["no_keyword_match"] += 1
                     if len(rejected_examples) < 5:
                         rejected_examples.append(
-                            f"{job.title!r} | {job.company!r}"
+                            f"{job.title!r} | {job.company!r} | {job.location!r}"
                         )
                     continue
 
@@ -109,8 +117,9 @@ def collect_new_jobs(config: Config, store: SeenStore) -> list[Job]:
     log.info(
         "Search summary: %(retrieved)d retrieved, %(already_seen)d already seen, "
         "%(duplicate)d duplicates, %(too_old)d outside date window, "
-        "%(excluded_location)d excluded by location, %(no_keyword_match)d "
-        "without a keyword match; %(matched)d new matches.",
+        "%(excluded_location)d excluded by exclusion rules, "
+        "%(outside_target_location)d outside target location, "
+        "%(no_keyword_match)d without a keyword match; %(matched)d new matches.",
         {**counts, "matched": len(new_jobs)},
     )
     return new_jobs
@@ -122,6 +131,13 @@ def is_excluded_location(location: str, terms: list[str]) -> bool:
         return False
     haystack = tokenize(location)
     return any(tokenize(term).strip() in haystack for term in terms if term.strip())
+
+
+def is_target_location(location: str, target: str) -> bool:
+    """True only when the posting location explicitly contains the target place."""
+    if not location or not target:
+        return False
+    return tokenize(target).strip() in tokenize(location)
 
 
 def notify(config: Config, jobs: list[Job]) -> list[str]:
