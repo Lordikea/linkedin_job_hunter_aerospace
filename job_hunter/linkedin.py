@@ -152,9 +152,9 @@ class LinkedInClient:
 
             if response.status_code == 429:
                 if attempt == 2:
-                    raise RateLimited("LinkedIn 429 döndü, tarama durduruldu.")
+                    raise RateLimited("LinkedIn returned HTTP 429; the search was stopped.")
                 backoff = self.delay_seconds * (2 ** (attempt + 1))
-                log.warning("429 alındı, %.0f sn bekleniyor", backoff)
+                log.warning("Received HTTP 429; waiting %.0f seconds before retrying", backoff)
                 time.sleep(backoff)
                 continue
             if response.status_code in (400, 404):
@@ -201,8 +201,8 @@ class LinkedInClient:
                     # A non-empty body with no cards means LinkedIn served a
                     # login wall or changed its markup — not "no jobs today".
                     log.warning(
-                        "'%s' için yanıt geldi ama hiç ilan kartı ayrıştırılamadı. "
-                        "LinkedIn giriş duvarı göstermiş veya sayfa yapısı değişmiş olabilir.",
+                        "Received a response for '%s', but no job cards could be parsed. "
+                        "LinkedIn may have displayed a sign-in wall or changed its page structure.",
                         keywords,
                     )
                 break
@@ -219,9 +219,9 @@ class LinkedInClient:
             start += len(page)
 
         log.info(
-            "'%s' (%s) için %d ilan bulundu",
+            "Found %d job listings for '%s' (%s)", 
             keywords,
-            location or "tüm konumlar",
+            location or "all locations",
             len(found),
         )
         return list(found.values())[:max_results]
