@@ -29,12 +29,12 @@ def apply_overrides(
         if not matched:
             names = ", ".join(s.name for s in config.searches)
             raise ConfigError(
-                f"'{only_search}' adında bir arama yok. Mevcut aramalar: {names}"
+                f"No search named '{only_search}' was found. Available searches: {names}"
             )
         for search in config.searches:
             search.enabled = search in matched
         log = logging.getLogger(__name__)
-        log.info("Yalnızca şu arama çalışacak: %s", ", ".join(s.name for s in matched))
+        log.info("Only the following search will run: %s", ", ".join(s.name for s in matched))
 
     if hours is not None:
         config.settings.hours = hours
@@ -46,30 +46,30 @@ def apply_overrides(
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="job_hunter",
-        description="LinkedIn'de son 24 saatte yayınlanan ilanları tara ve bildir.",
+        description="Search and notify about job listings posted within the last 24 hours.",
     )
-    parser.add_argument("--config", default="config.yaml", help="Config dosyası yolu")
+    parser.add_argument("--config", default="config.yaml", help="Path to the configuration file")
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Bildirim gönderme ve kayıt dosyasını değiştirme, sadece bulunanları yazdır",
+        help="Do not send notifications or update the history; only print matching listings.",
     )
-    parser.add_argument("--verbose", "-v", action="store_true", help="Ayrıntılı log")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable detailed logging")
     parser.add_argument(
         "--only-search",
         default="",
         metavar="AD",
-        help="Yalnızca adı bunu içeren aramayı çalıştır (tek seferlik tarama için)",
+        help="Run only the search whose name contains this text (for a one-off scan)",
     )
     parser.add_argument(
         "--hours",
         type=int,
-        help="Kaç saat geriye bakılsın (config'teki değeri geçersiz kılar)",
+        help="How many hours back to search (overrides the config value)",
     )
     parser.add_argument(
         "--max-results",
         type=int,
-        help="Kelime başına taranacak en fazla ilan (config'teki değeri geçersiz kılar)",
+        help="Maximum listings to retrieve per keyword (overrides the config value)",
     )
     args = parser.parse_args(argv)
 
@@ -88,7 +88,7 @@ def main(argv: list[str] | None = None) -> int:
             max_results=args.max_results,
         )
     except ConfigError as exc:
-        logging.error("Config hatası: %s", exc)
+        logging.error("Configuration error: %s", exc)
         return 2
 
     return run(config, dry_run=args.dry_run)
