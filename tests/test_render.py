@@ -17,17 +17,19 @@ def job(**kwargs):
 
 
 def test_subject_names_the_posting_when_there_is_only_one():
-    assert render.subject([job()]) == "[İlan] Finans Uzmanı – Acme"
+    assert render.subject([job()]) == "[Aerospace Job Alert] Finans Uzmanı — Acme"
 
 
 def test_subject_counts_multiple_postings():
-    assert render.subject([job(), job(id="2")]) == "[İlan] 2 yeni ilan"
+    assert render.subject([job(), job(id="2")]) == (
+        "[Aerospace Job Alert] 2 new aerospace job opportunities"
+    )
 
 
 def test_text_body_lists_url_and_matches():
     body = render.as_text([job()])
     assert "https://www.linkedin.com/jobs/view/1" in body
-    assert "Eşleşen: finans" in body
+    assert "Matched keywords: finans" in body
 
 
 def test_html_escapes_hostile_titles():
