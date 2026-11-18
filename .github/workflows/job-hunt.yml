@@ -1,5 +1,5 @@
 
-name: LinkedIn ilan taraması
+name: LinkedIn Job Search
 
 # Runs manually or through cron-job.org using workflow_dispatch.
 # GitHub's own schedule trigger is intentionally disabled.
@@ -8,22 +8,22 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Bildirim gönderme, sadece bulunanları logla"
+        description: "Do not send notifications; only log matching listings"
         type: boolean
         default: false
 
       only_search:
-        description: "Yalnızca adı bunu içeren aramayı çalıştır (boş = tümü)"
+        description: "Run only the search whose name contains this text (blank = all searches)"
         type: string
         default: ""
 
       hours:
-        description: "Kaç saat geriye bakılsın (boş = config değeri)"
+        description: "How many hours back to search (blank = use the config value)"
         type: string
         default: ""
 
       max_results:
-        description: "Kelime başına en fazla ilan (boş = config değeri)"
+        description: "Maximum listings per keyword (blank = use the config value)"
         type: string
         default: ""
 
