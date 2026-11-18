@@ -70,12 +70,11 @@ def collect_new_jobs(config: Config, store: SeenStore) -> list[Job]:
                     counts["excluded_location"] += 1
                     continue
 
-                # Match both the role title and employer. This matters for
-                # company-specific searches such as ATR, where the employer
-                # name may not appear in the job title.
-                searchable_text = f"{job.title} {job.company}"
+                # Relevance is determined by the role title, not the employer.
+                # Matching company names caused unrelated vacancies at an
+                # aerospace company to pass the keyword filter.
                 hits = matches(
-                    searchable_text,
+                    job.title,
                     search.keywords,
                     mode=search.match_mode,
                     exclude=search.exclude,
