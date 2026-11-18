@@ -120,6 +120,33 @@ def test_location_filter_is_off_when_no_terms_are_configured(monkeypatch, tmp_pa
     assert [j.id for j in found] == ["1"]
 
 
+
+def test_configured_target_location_rejects_foreign_results(monkeypatch, tmp_path):
+    jobs = [
+        job("1", "Avionics Systems Engineer"),
+        job("2", "Avionics Systems Engineer"),
+    ]
+    jobs[0].location = "Toulouse, France"
+    jobs[1].location = "Singapore"
+    stub_client(monkeypatch, jobs)
+
+    found = runner.collect_new_jobs(
+        make_config(location="Singapore"),
+        SeenStore(tmp_path / "s.json"),
+    )
+    assert [j.id for j in found] == ["2"]
+
+
+def test_configured_target_location_rejects_missing_location(monkeypatch, tmp_path):
+    jobs = [job("1", "Avionics Systems Engineer")]
+    stub_client(monkeypatch, jobs)
+
+    found = runner.collect_new_jobs(
+        make_config(location="Singapore"),
+        SeenStore(tmp_path / "s.json"),
+    )
+    assert found == []
+
 def test_one_broken_recipient_does_not_block_the_others(monkeypatch):
     mine = Search(name="Benim", keywords=["finans"], recipients=["me@example.com"])
     theirs = Search(name="Arkadaşım", keywords=["denetim"], recipients=["friend@example.com"])
