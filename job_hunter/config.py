@@ -36,7 +36,7 @@ class Search:
 class EmailConfig:
     enabled: bool = True
     recipients: list[str] = field(default_factory=list)
-    subject_prefix: str = "[İlan]"
+    subject_prefix: str = "[Job Alert]"
     host: str = ""
     port: int = 587
     username: str = ""
@@ -94,21 +94,21 @@ def _as_list(value: Any) -> list[str]:
 
 
 def _load_search(raw: dict[str, Any], index: int) -> Search:
-    name = str(raw.get("name") or f"Arama {index + 1}")
+    name = str(raw.get("name") or f"Search {index + 1}")
     keywords = [kw.strip() for kw in _as_list(raw.get("keywords")) if kw.strip()]
     if not keywords:
-        raise ConfigError(f"'{name}' aramasında en az bir anahtar kelime olmalı.")
+        raise ConfigError(f"Search '{name}' must contain at least one keyword.")
     if len(keywords) > MAX_KEYWORDS:
         raise ConfigError(
-            f"'{name}' aramasında {len(keywords)} anahtar kelime var; "
-            f"en fazla {MAX_KEYWORDS} olabilir."
+            f"Search '{name}' has {len(keywords)} keywords; "
+            f"the maximum is {MAX_KEYWORDS}."
         )
 
     mode = str(raw.get("match_mode", "any")).lower()
     if mode not in VALID_MODES:
         raise ConfigError(
-            f"'{name}' aramasının match_mode değeri {sorted(VALID_MODES)} "
-            f"içinden biri olmalı, '{mode}' değil."
+            f"Search '{name}' has an invalid match_mode. Expected one of {sorted(VALID_MODES)}, "
+            f"not '{mode}'."
         )
 
     # A search can name a secret holding its recipients, so a public repo
@@ -125,13 +125,13 @@ def _load_search(raw: dict[str, Any], index: int) -> Search:
             # Falling back to the global list here would quietly send this
             # search's alerts to the wrong person.
             raise ConfigError(
-                f"'{name}' araması alıcılarını '{secret_name}' secret'ından "
-                f"okuyor ama değer gelmedi. İki yeri de kontrol et: (1) secret "
-                f"GitHub'da tanımlı mı (Settings > Secrets and variables > "
-                f"Actions), (2) .github/workflows/job-hunt.yml içindeki env "
-                f"listesine '{secret_name}: ${{{{ secrets.{secret_name} }}}}' "
-                f"satırı eklenmiş mi. Alternatif olarak aramayı geçici "
-                f"kapatmak için 'enabled: false' yap."
+                f"Search '{name}' reads recipients from secret '{secret_name}', "
+                f"but no value was provided. Check both: (1) whether the secret "
+                f"is configured in GitHub (Settings > Secrets and variables > "
+                f"Actions), and (2) whether .github/workflows/job-hunt.yml includes an env "
+                f"entry '{secret_name}: ${{{{ secrets.{secret_name} }}}}' "
+                f". Alternatively, temporarily disable the search "
+                f"by setting 'enabled: false'."
             )
         for address in from_secret:
             if address not in recipients:
@@ -175,13 +175,13 @@ def _env_list(name: str) -> list[str]:
 def load_config(path: str | Path) -> Config:
     path = Path(path)
     if not path.exists():
-        raise ConfigError(f"Config dosyası bulunamadı: {path}")
+        raise ConfigError(f"Configuration file not found: {path}")
 
     raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
     raw_searches = raw.get("searches") or []
     if not raw_searches:
-        raise ConfigError("config.yaml içinde en az bir 'searches' girdisi olmalı.")
+        raise ConfigError("config.yaml must contain at least one 'searches' entry.")
     searches = [_load_search(item or {}, i) for i, item in enumerate(raw_searches)]
 
     raw_notify = raw.get("notifications") or {}
@@ -198,7 +198,7 @@ def load_config(path: str | Path) -> Config:
     email = EmailConfig(
         enabled=bool(raw_email.get("enabled", True)),
         recipients=recipients,
-        subject_prefix=str(raw_email.get("subject_prefix", "[İlan]")),
+        subject_prefix=str(raw_email.get("subject_prefix", "[Job Alert]")),
         host=_env("SMTP_HOST", str(raw_email.get("host", "smtp.gmail.com"))),
         port=int(_env("SMTP_PORT", str(raw_email.get("port", 587)))),
         username=_env("SMTP_USERNAME"),
@@ -229,12 +229,12 @@ def load_config(path: str | Path) -> Config:
         orphans = [s.name for s in config.active_searches() if not config.recipients_for(s)]
         if orphans:
             raise ConfigError(
-                "Şu aramaların alıcısı yok: "
+                "No recipients configured for these searches: "
                 + ", ".join(orphans)
-                + ". Aramaya 'recipients' (ya da 'recipients_secret') ekle, "
-                "veya notifications.email.recipients altına genel bir adres yaz."
+                + ". Add 'recipients' (or 'recipients_secret') to the search, "
+                "or add a global address under notifications.email.recipients."
             )
     if ntfy.enabled and not ntfy.topic:
-        raise ConfigError("ntfy açık ama 'topic' boş.")
+        raise ConfigError("ntfy is enabled, but 'topic' is empty.")
 
     return config
