@@ -36,7 +36,7 @@ def test_accepts_up_to_ten_keywords(tmp_path):
 
 def test_rejects_more_than_ten_keywords(tmp_path):
     eleven = "[" + ", ".join(f"k{i}" for i in range(11)) + "]"
-    with pytest.raises(ConfigError, match="en fazla 10"):
+    with pytest.raises(ConfigError, match="maximum is 10"):
         load_config(write(tmp_path, BASE.replace("[finans, IFRS]", eleven)))
 
 
@@ -51,12 +51,12 @@ def test_rejects_unknown_match_mode(tmp_path):
 
 def test_rejects_email_without_recipients(tmp_path):
     text = BASE.replace('    recipients: ["me@example.com"]', "    recipients: []")
-    with pytest.raises(ConfigError, match="alıcı"):
+    with pytest.raises(ConfigError, match="recipients"):
         load_config(write(tmp_path, text))
 
 
 def test_missing_file_is_reported(tmp_path):
-    with pytest.raises(ConfigError, match="bulunamadı"):
+    with pytest.raises(ConfigError, match="not found"):
         load_config(tmp_path / "yok.yaml")
 
 
@@ -140,7 +140,7 @@ def test_disabled_searches_are_skipped(tmp_path):
 
 def test_a_search_without_any_recipient_is_rejected(tmp_path):
     text = BASE.replace('    recipients: ["me@example.com"]', "    recipients: []")
-    with pytest.raises(ConfigError, match="alıcısı yok"):
+    with pytest.raises(ConfigError, match="No recipients configured"):
         load_config(write(tmp_path, text))
 
 
