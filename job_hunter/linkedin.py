@@ -219,10 +219,10 @@ class LinkedInClient:
             start += len(page)
 
         log.info(
-            "Found %d job listings for '%s' (%s)", 
+            "Found %d job listings for '%s' (%s)",
+            len(found),
             keywords,
             location or "all locations",
-            len(found),
         )
         return list(found.values())[:max_results]
 
