@@ -1,8 +1,8 @@
 """Text helpers shared by search and matching.
 
-Keyword matching has to survive Turkish casing (``İSTANBUL`` vs ``istanbul``)
-and punctuation inside terms such as ``FP&A``, so everything is folded to a
-plain ASCII lowercase form before comparison.
+Keyword matching has to handle language-specific casing and punctuation
+inside terms such as ``FP&A``, so everything is folded to a plain ASCII
+lowercase form before comparison.
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ _NON_ALNUM = re.compile(r"[^a-z0-9]+")
 
 
 def fold(value: str) -> str:
-    """Lowercase ``value`` and strip accents, Turkish letters included."""
+    """Lowercase ``value`` and strip accents, including Turkish letters."""
     if not value:
         return ""
     folded = value.translate(_TURKISH_MAP).lower()
