@@ -35,4 +35,4 @@ def send_ntfy(config: NtfyConfig, jobs: list[Job]) -> None:
         url, data=render.as_text(jobs).encode("utf-8"), headers=headers, timeout=20
     )
     response.raise_for_status()
-    log.info("%d ilan ntfy konusuna gönderildi", len(jobs))
+    log.info("Sent %d job listing(s) to the ntfy topic", len(jobs))
