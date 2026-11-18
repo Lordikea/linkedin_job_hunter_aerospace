@@ -2,28 +2,25 @@
 searches:
 
   # ==========================================
-  # SEARCH 1: AVIONICS / FLIGHT SYSTEMS
-  # Civil aviation engineering roles in Singapore.
+  # SEARCH 1: AIRBUS / TOULOUSE / AVIONIQUE
+  # French engineering job titles containing "avionique".
+  # Employer is restricted to Airbus.
   # ==========================================
 
-  - name: "Avionics & Flight Systems - Singapore"
+  - name: "Airbus Toulouse - Ingénierie avionique"
 
     keywords:
-      - "Avionics"
-      - "Avionics Systems"
-      - "Aircraft Systems Engineer"
-      - "Aircraft Systems"
-      - "Flight Controls"
-      - "Flight Control Systems"
-      - "Autoflight"
-      - "Flight Management Systems"
-      - "Aircraft Navigation Systems"
-      - "Aircraft Communications"
+      - "avionique"
 
-    location: "France"
+    location: "Toulouse"
+    company_include:
+      - "Airbus"
     match_mode: any
 
     exclude:
+      - "stage"
+      - "stagiaire"
+      - "alternance"
       - "intern"
       - "internship"
       - "trainee"
@@ -35,64 +32,35 @@ searches:
 
 
   # ==========================================
-  # SEARCH 2: CUSTOMER / TECHNICAL / PRODUCT SUPPORT
-  # Keep support searches tied to aircraft, avionics or aerospace.
+  # SEARCH 2: CIVIL AVIATION / AVIONICS ENGINEERING
+  # Singapore-based roles across civil aviation employers.
   # ==========================================
 
-  - name: "Aircraft & Avionics Customer Support - Singapore"
+  - name: "Civil Aviation Avionics Engineering - Singapore"
 
     keywords:
-      - "Avionics Support"
-      - "Aircraft Support Engineer"
-      - "Aircraft Customer Support"
-      - "Aircraft Technical Support"
-      - "Aircraft Product Support"
-      - "Aerospace Customer Support"
-      - "Aerospace Technical Support"
-      - "Aerospace Product Support"
-      - "In-Service Support Engineer"
-      - "Customer Support Avionics"
-
-    location: "France"
-    match_mode: any
-
-    exclude:
-      - "intern"
-      - "internship"
-      - "trainee"
-
-    remote_only: false
-    recipients: []
-    max_results: 25
-    enabled: true
-
-
-  # ==========================================
-  # SEARCH 3: AIRCRAFT / AEROSPACE SYSTEMS ENGINEERING
-  # Avoid generic "Systems Engineer" which brings IT and unrelated sectors.
-  # ==========================================
-
-  - name: "Aircraft Systems Engineering - Singapore"
-
-    keywords:
-      - "Aircraft Systems Engineering"
-      - "Aircraft Systems Engineer"
-      - "Aerospace Systems Engineer"
-      - "Aviation Systems Engineer"
-      - "Aircraft System Integration"
-      - "Aircraft Systems Integration"
-      - "Aircraft Systems Support"
+      - "Avionics Engineer"
       - "Avionics Systems Engineer"
-      - "Aircraft Electrical Systems"
-      - "Flight Systems Engineer"
+      - "Avionics"
+      - "Aircraft Systems Engineer"
+      - "Aircraft Systems Integration Engineer"
+      - "Flight Controls Engineer"
+      - "Aircraft Technical Support Engineer"
+      - "Avionics Support Engineer"
+      - "Aviation Systems Engineer"
+      - "Aircraft Electrical Systems Engineer"
 
-    location: "France"
+    location: "Singapore"
     match_mode: any
 
     exclude:
       - "intern"
       - "internship"
       - "trainee"
+      - "defence"
+      - "defense"
+      - "military"
+      - "militaire"
 
     remote_only: false
     recipients: []
