@@ -36,3 +36,4 @@ def send_ntfy(config: NtfyConfig, jobs: list[Job]) -> None:
     )
     response.raise_for_status()
     log.info("Sent %d job listing(s) to the ntfy topic", len(jobs))
+

@@ -113,3 +113,4 @@ def test_parse_jobs_collapses_non_breaking_spaces():
 </div></li>"""
     (job,) = parse_jobs(html)
     assert job.title == "Finans Uzmanı"
+

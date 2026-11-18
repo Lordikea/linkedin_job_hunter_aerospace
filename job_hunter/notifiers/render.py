@@ -108,3 +108,4 @@ def as_html(jobs: list[Job]) -> str:
     </p>
   </div>
 </body></html>"""
+

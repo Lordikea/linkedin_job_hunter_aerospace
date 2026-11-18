@@ -54,3 +54,4 @@ def test_yesterdays_posting_is_kept_because_the_date_has_no_time():
 
 def test_unknown_age_is_kept():
     assert is_recent("", "", 24, TODAY) is True
+

@@ -69,3 +69,4 @@ def send_email(config: EmailConfig, recipients: list[str], jobs: list[Job]) -> N
         raise EmailError(f"SMTP error: {exc}") from exc
 
     log.info("Emailed %d job listing(s) to %s", len(jobs), ", ".join(recipients))
+

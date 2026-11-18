@@ -218,3 +218,4 @@ def run(config: Config, dry_run: bool = False) -> int:
     store.save()
     log.info("Successfully processed and recorded %d job(s).", len(jobs))
     return 0
+

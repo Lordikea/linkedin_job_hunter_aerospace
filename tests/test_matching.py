@@ -82,3 +82,4 @@ def test_french_customer_support_title_matches():
 
 def test_exclusion_still_applies_to_french_alias_matches():
     assert matches("Ingénieur système avionique - stage", ["Avionics"], exclude=["stage"]) == []
+

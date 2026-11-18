@@ -179,3 +179,4 @@ def test_enabled_search_still_requires_its_secret(tmp_path, monkeypatch):
     monkeypatch.delenv("FRIEND_EMAIL", raising=False)
     with pytest.raises(ConfigError, match="FRIEND_EMAIL"):
         load_config(write(tmp_path, SHARED))
+

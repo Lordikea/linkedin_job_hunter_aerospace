@@ -41,3 +41,4 @@ if __name__ == "__main__":
         forget_after_days=configured_retention_days(),
     )
     print(f"{count} job history record(s) retained.")
+

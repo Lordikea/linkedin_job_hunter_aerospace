@@ -90,3 +90,4 @@ def matches(
     if mode == "all":
         return hits if len(hits) == len(keywords) else []
     return hits
+

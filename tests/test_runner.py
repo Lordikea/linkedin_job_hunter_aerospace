@@ -148,3 +148,4 @@ def test_company_include_filter_rejects_other_employers(monkeypatch, tmp_path):
         SeenStore(tmp_path / "s.json"),
     )
     assert [j.id for j in found] == ["1"]
+

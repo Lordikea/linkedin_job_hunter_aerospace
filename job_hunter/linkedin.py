@@ -240,3 +240,4 @@ def build_query(keywords: list[str], mode: str) -> list[str]:
     if mode == "all":
         return [" AND ".join(f'"{kw}"' if " " in kw else kw for kw in keywords)]
     return list(keywords)
+

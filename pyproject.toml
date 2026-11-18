@@ -3,3 +3,4 @@
 # `python -m pytest` (the bare command does not add the current directory).
 pythonpath = ["."]
 testpaths = ["tests"]
+

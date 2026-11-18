@@ -99,3 +99,4 @@ settings:
   request_delay_seconds: 3
   state_file: "state/seen_jobs.json"
   forget_after_days: 30
+

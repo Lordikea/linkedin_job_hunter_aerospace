@@ -104,3 +104,4 @@ def test_merge_state_files_tolerates_a_missing_side(tmp_path):
     store.save()
 
     assert merge_state_files(a, tmp_path / "yok.json", out) == 1
+

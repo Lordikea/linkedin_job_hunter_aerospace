@@ -53,3 +53,4 @@ def tokenize(value: str) -> str:
     way still matches a job title written the other.
     """
     return " " + _NON_ALNUM.sub(" ", fold(value)).strip() + " "
+

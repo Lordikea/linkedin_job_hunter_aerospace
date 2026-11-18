@@ -47,3 +47,4 @@ def test_no_overrides_leaves_the_config_untouched():
     apply_overrides(config)
     assert len(config.active_searches()) == 3
     assert config.settings.hours == 24
+

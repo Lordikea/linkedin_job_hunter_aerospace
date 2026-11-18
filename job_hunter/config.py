@@ -238,3 +238,4 @@ def load_config(path: str | Path) -> Config:
         raise ConfigError("ntfy is enabled, but 'topic' is empty.")
 
     return config
+

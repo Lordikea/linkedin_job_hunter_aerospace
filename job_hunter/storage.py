@@ -139,3 +139,4 @@ def merge_state_files(
         encoding="utf-8",
     )
     return len(retained)
+

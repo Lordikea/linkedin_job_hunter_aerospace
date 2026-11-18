@@ -58,3 +58,4 @@ def test_subject_can_be_used_as_a_mail_header():
     message = EmailMessage()
     message["Subject"] = render.subject([job(title="Uzman\nİstanbul\nTam zamanlı")])
     assert "Uzman İstanbul Tam zamanlı" in message["Subject"]
+

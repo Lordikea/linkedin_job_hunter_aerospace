@@ -70,3 +70,4 @@ def is_recent(posted_at: str, posted_label: str, hours: int, today: date | None 
     # yesterday reads as 24h old at midnight. One day of slack avoids dropping
     # genuinely fresh postings.
     return age <= hours + 24
+
