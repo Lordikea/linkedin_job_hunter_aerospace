@@ -1,4 +1,4 @@
-"""Work out how old a posting is, from the card's own date fields.
+"Work out how old a posting is, from the card's own date fields.
 
 LinkedIn does not always honour the "last 24 hours" filter: when a query has
 few results it pads the list with older, unrelated postings. So the age is
@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from datetime import date, datetime, timezone
 
-# "5 gün önce", "18 dakika önce", "2 weeks ago", "1 month ago"
+# LinkedIn may return relative dates in Turkish or English.
 _RELATIVE = re.compile(
     r"(\d+)\s*(dakika|saat|gün|hafta|ay|yıl|minute|hour|day|week|month|year)",
     re.IGNORECASE,
@@ -33,11 +33,11 @@ _UNIT_HOURS = {
 
 
 def age_hours(posted_at: str = "", posted_label: str = "", today: date | None = None):
-    """Approximate posting age in hours, or None when it cannot be told.
+    """Approximate posting age in hours, or None when it cannot be determined.
 
     ``posted_at`` is the card's ``<time datetime="...">`` value — a plain date,
-    so a posting from today reads as 0 hours old. ``posted_label`` ("5 gün
-    önce") is the fallback when the attribute is missing.
+    so a posting from today reads as 0 hours old. ``posted_label`` is the
+    fallback when the attribute is missing.
     """
     if posted_at:
         try:
