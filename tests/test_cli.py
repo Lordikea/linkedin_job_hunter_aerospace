@@ -31,7 +31,7 @@ def test_only_search_ignores_case_and_turkish_letters():
 
 
 def test_unknown_search_name_is_rejected():
-    with pytest.raises(ConfigError, match="Mevcut aramalar"):
+    with pytest.raises(ConfigError, match="Available searches"):
         apply_overrides(make_config(), only_search="Yazılım")
 
 
