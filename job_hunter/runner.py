@@ -31,6 +31,7 @@ def collect_new_jobs(config: Config, store: SeenStore) -> list[Job]:
         "too_old": 0,
         "excluded_location": 0,
         "outside_target_location": 0,
+        "outside_target_company": 0,
         "no_keyword_match": 0,
     }
 
@@ -78,6 +79,13 @@ def collect_new_jobs(config: Config, store: SeenStore) -> list[Job]:
                         )
                     continue
 
+                if search.company_include and not any(
+                    tokenize(term).strip() in tokenize(job.company)
+                    for term in search.company_include
+                ):
+                    counts["outside_target_company"] += 1
+                    continue
+
                 # Relevance is determined by the role title, not the employer.
                 # Matching company names caused unrelated vacancies at an
                 # aerospace company to pass the keyword filter.
@@ -119,6 +127,7 @@ def collect_new_jobs(config: Config, store: SeenStore) -> list[Job]:
         "%(duplicate)d duplicates, %(too_old)d outside date window, "
         "%(excluded_location)d excluded by exclusion rules, "
         "%(outside_target_location)d outside target location, "
+        "%(outside_target_company)d outside target company, "
         "%(no_keyword_match)d without a keyword match; %(matched)d new matches.",
         {**counts, "matched": len(new_jobs)},
     )
