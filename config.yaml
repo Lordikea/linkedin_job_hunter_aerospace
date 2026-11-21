@@ -1,13 +1,10 @@
-
 searches:
 
   # ==========================================
-  # SEARCH 1: AIRBUS / TOULOUSE / AVIONIQUE
-  # French engineering job titles containing "avionique".
-  # Employer is restricted to Airbus.
+  # SEARCH 1: AIRBUS / TOULOUSE / AVIONICS
   # ==========================================
 
-  - name: "Airbus Toulouse - Ingénierie avionique"
+  - name: "Airbus Toulouse - Avionics Engineering"
 
     keywords:
       - "avionique"
@@ -32,11 +29,10 @@ searches:
 
 
   # ==========================================
-  # SEARCH 2: CIVIL AVIATION / AVIONICS ENGINEERING
-  # Singapore-based roles across civil aviation employers.
+  # SINGAPORE SEARCH 1: AVIONICS & AIRCRAFT SYSTEMS
   # ==========================================
 
-  - name: "Civil Aviation Avionics Engineering - Singapore"
+  - name: "Singapore - Avionics & Aircraft Systems"
 
     keywords:
       - "Avionics Engineer"
@@ -44,11 +40,113 @@ searches:
       - "Avionics"
       - "Aircraft Systems Engineer"
       - "Aircraft Systems Integration Engineer"
+      - "Aircraft Electrical Systems Engineer"
+      - "Aviation Systems Engineer"
+      - "Aircraft Systems"
+
+    location: "Singapore"
+    match_mode: any
+
+    exclude:
+      - "intern"
+      - "internship"
+      - "trainee"
+      - "defence"
+      - "defense"
+      - "military"
+      - "militaire"
+
+    remote_only: false
+    recipients: []
+    max_results: 25
+    enabled: true
+
+
+  # ==========================================
+  # SINGAPORE SEARCH 2: FLIGHT CONTROLS & AVIONICS SYSTEMS
+  # ==========================================
+
+  - name: "Singapore - Flight Controls & Avionics Systems"
+
+    keywords:
       - "Flight Controls Engineer"
+      - "Flight Control Systems Engineer"
+      - "Autoflight Systems Engineer"
+      - "Flight Management Systems Engineer"
+      - "Navigation Systems Engineer"
+      - "Aircraft Communications Engineer"
+      - "Integrated Modular Avionics Engineer"
+      - "Avionics Integration Engineer"
+
+    location: "Singapore"
+    match_mode: any
+
+    exclude:
+      - "intern"
+      - "internship"
+      - "trainee"
+      - "defence"
+      - "defense"
+      - "military"
+      - "militaire"
+
+    remote_only: false
+    recipients: []
+    max_results: 25
+    enabled: true
+
+
+  # ==========================================
+  # SINGAPORE SEARCH 3: IN-SERVICE & TECHNICAL SUPPORT
+  # ==========================================
+
+  - name: "Singapore - In-Service & Technical Support"
+
+    keywords:
       - "Aircraft Technical Support Engineer"
       - "Avionics Support Engineer"
-      - "Aviation Systems Engineer"
-      - "Aircraft Electrical Systems Engineer"
+      - "In-Service Support Engineer"
+      - "Aircraft Support Engineer"
+      - "Aerospace Product Support Engineer"
+      - "Fleet Support Engineer"
+      - "Technical Services Engineer Aviation"
+      - "Customer Support Engineer Aviation"
+
+    location: "Singapore"
+    match_mode: any
+
+    exclude:
+      - "intern"
+      - "internship"
+      - "trainee"
+      - "defence"
+      - "defense"
+      - "military"
+      - "militaire"
+
+    remote_only: false
+    recipients: []
+    max_results: 25
+    enabled: true
+
+
+  # ==========================================
+  # SINGAPORE SEARCH 4: RELIABILITY, MRO, TEST & ATR
+  # ==========================================
+
+  - name: "Singapore - Reliability, MRO, Test & ATR"
+
+    keywords:
+      - "Aircraft Reliability Engineer"
+      - "Aircraft Maintenance Engineer"
+      - "Maintenance Planning Engineer"
+      - "Aircraft Production Support Engineer"
+      - "Aircraft Manufacturing Engineer"
+      - "Airworthiness Engineer"
+      - "Aircraft Test Engineer"
+      - "Avionics Test Engineer"
+      - "ATR Engineer"
+      - "ATR Technical Support Engineer"
 
     location: "Singapore"
     match_mode: any
@@ -99,4 +197,3 @@ settings:
   request_delay_seconds: 3
   state_file: "state/seen_jobs.json"
   forget_after_days: 30
-
